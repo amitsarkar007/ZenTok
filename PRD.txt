@@ -1,0 +1,16 @@
+create a TikTok style site for quotes using zenquotes.io
+
+it should be using simple HTML, Javascript and vanilla CSS.
+
+Each page should attribute the source
+Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a>
+
+Infinite scrolling.
+
+API reference - https://docs.zenquotes.io/zenquotes-documentation/
+
+Display Quote, author. Display random colors for each quote. Contrast the background color with the text color to ensure the wbesite is accessible
+
+Code reference - https://github.com/amitsarkar007/XKCDTok
+
+Oragnize CSS and Scripts in separate folders

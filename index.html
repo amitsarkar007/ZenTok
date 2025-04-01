@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ZenTok</title>
+    <meta name="author" content="Amit Sarkar">
+    <meta name="keywords" content="ZenTok, quotes, inspiration, TikTok, vertical scrolling, infinite scroll, web app, random quotes">
+
+    <!-- Meta tags for social media -->
+    <meta property="og:title" content="ZenTok - Inspirational Quotes in TikTok Style">
+    <meta property="og:description" content="A TikTok-style interface for exploring inspirational quotes. Scroll through random quotes in a vertical feed!">
+    <meta property="og:image" content="meta-image.svg">
+    <meta property="og:url" content="https://zentok.com">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter specific -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:creator" content="@amit_sarkar007">
+    <meta name="twitter:title" content="ZenTok - Inspirational Quotes in TikTok Style">
+    <meta name="twitter:description" content="A TikTok-style interface for exploring inspirational quotes. Scroll through random quotes in a vertical feed!">
+    <meta name="twitter:image" content="meta-image.svg">
+    
+    <link rel="icon" type="image/svg+xml" href="favicon.svg">
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <button id="about-button" class="about-button">About</button>
+        <div id="quotes-container"></div>
+        <div id="loading" class="loading">Loading...</div>
+    </div>
+    <div id="about-modal" class="about-modal">
+        <div class="about-modal-content">
+            <button id="close-about" class="close-button">✕</button>
+            <h2>About ZenTok</h2>
+            <p>A TikTok-style interface for exploring inspirational quotes.</p>
+            <p class="about-links">
+                Made with ❤️ by <a href="https://x.com/amit_sarkar007" target="_blank" rel="noopener noreferrer">@amitsarkar007</a>
+            </p>
+            <p class="about-links">
+                Check out the code on <a href="https://github.com/amitsarkar007/ZenTok" target="_blank" rel="noopener noreferrer">GitHub</a>
+            </p>
+            <p class="about-links">
+                If you enjoy this project, you can <a href="https://buymeacoffee.com/amitsarkar" target="_blank" rel="noopener noreferrer">buy me a coffee! ☕</a>
+            </p>
+        </div>
+    </div>
+    <footer>
+        <p>Inspirational quotes provided by <a href="https://zenquotes.io/" target="_blank">ZenQuotes API</a></p>
+    </footer>
+    <script src="js/main.js"></script>
+</body>
+</html> 

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- White background -->
+    <rect width="1200" height="630" fill="#FFFFFF"/>
+
+    <!-- "ZenTok" in a modern and minimal style -->
+    <g transform="translate(150, 200)" font-family="Arial, sans-serif" font-size="120" font-weight="normal">
+        <text x="0" y="0" fill="#000000">Zen</text>
+        <text x="180" y="0" fill="#0066CC">Tok</text>
+    </g>
+</svg> 
