@@ -1,16 +1,17 @@
 # ZenTok
 
-A modern, minimalist social media platform focused on mindful content sharing and meaningful connections.
+A modern, minimalist web application that displays inspirational quotes from ZenQuotes API.
 
 ## Overview
 
-ZenTok is a web-based social media platform that encourages mindful content creation and consumption. It provides a clean, distraction-free interface for users to share and engage with content that matters.
+ZenTok is a web-based application that fetches and displays inspirational quotes from the ZenQuotes API. It provides a clean, distraction-free interface for users to read and reflect on meaningful quotes.
 
 ## Features
 
 - Clean, minimalist user interface
-- Focus on meaningful content sharing
-- Distraction-free browsing experience
+- Random inspirational quotes
+- Author attribution
+- Distraction-free reading experience
 - Modern and responsive design
 - SVG-based assets for crisp visuals
 
