@@ -23,13 +23,15 @@ class QuoteManager {
         this.loadingElement.classList.add('active');
 
         try {
-            const response = await fetch(`https://zenquotes.io/api/quotes?page=${this.currentPage}`, {
+            const proxyUrl = 'https://api.allorigins.win/raw?url=';
+            const targetUrl = encodeURIComponent(`https://zenquotes.io/api/quotes?page=${this.currentPage}`);
+            
+            const response = await fetch(proxyUrl + targetUrl, {
                 method: 'GET',
                 headers: {
                     'Accept': 'application/json',
                     'Content-Type': 'application/json'
-                },
-                mode: 'cors'
+                }
             });
             
             const newQuotes = await response.json();
