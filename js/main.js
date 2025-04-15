@@ -4,7 +4,9 @@ class QuoteManager {
         this.loadingElement = document.getElementById('loading');
         this.quotes = [];
         this.isLoading = false;
-        this.currentPage = 1;
+        // Initialize with a random page between 1 and 3000
+        this.currentPage = Math.floor(Math.random() * 3000) + 1;
+        this.hasReachedEnd = false;
         
         this.init();
     }
@@ -15,19 +17,25 @@ class QuoteManager {
     }
 
     async loadQuotes() {
-        if (this.isLoading) return;
+        if (this.isLoading || this.hasReachedEnd) return;
         
         this.isLoading = true;
         this.loadingElement.classList.add('active');
 
         try {
-            // Using allorigins.win as a proxy
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const apiUrl = encodeURIComponent(`https://zenquotes.io/api/quotes?page=${this.currentPage}`);
-            const response = await fetch(proxyUrl + apiUrl);
+            const response = await fetch(`https://zenquotes.io/api/quotes?page=${this.currentPage}`, {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                    'Content-Type': 'application/json'
+                },
+                mode: 'cors'
+            });
+            
             const newQuotes = await response.json();
             
             if (newQuotes.length === 0) {
+                this.hasReachedEnd = true;
                 this.loadingElement.textContent = 'No more quotes available';
                 return;
             }
@@ -38,6 +46,8 @@ class QuoteManager {
         } catch (error) {
             console.error('Error loading quotes:', error);
             this.loadingElement.textContent = 'Error loading quotes. Please try again later.';
+            // If there's an error, try a different random page between 1 and 3000
+            this.currentPage = Math.floor(Math.random() * 3000) + 1;
         } finally {
             this.isLoading = false;
             this.loadingElement.classList.remove('active');
