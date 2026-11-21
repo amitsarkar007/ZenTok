@@ -70,19 +70,22 @@ class QuoteManager {
 
             if (fresh.length === 0) {
                 this.emptyLoads++;
-                if (this.emptyLoads <= 3) {
+                if (this.emptyLoads <= 8) {
                     // Same batch as before (rotation has not ticked yet).
-                    // Wait for the next rotation and try again quietly.
+                    // Wait for the next rotation and try again quietly, with
+                    // a patient backoff (10s, 20s, then every 30s).
                     this.retryPending = true;
                     this.loadingElement.classList.remove('active');
+                    const delay = Math.min(10000 * this.emptyLoads, 30000);
                     setTimeout(() => {
                         this.retryPending = false;
                         this.loadQuotes();
-                    }, 10000 * this.emptyLoads);
+                    }, delay);
                     return;
                 }
                 this.hasReachedEnd = true;
-                this.loadingElement.textContent = 'You have seen every quote available right now - new ones rotate in all the time, check back soon';
+                this.endedAt = Date.now();
+                this.loadingElement.textContent = 'You have seen every quote available right now - new ones rotate in all the time, scroll again in a minute';
                 this.loadingElement.classList.add('active');
                 return;
             }
@@ -144,11 +147,23 @@ class QuoteManager {
     }
 
     setupInfiniteScroll() {
-        window.addEventListener('scroll', () => {
-            const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
-            
+        // The feed scrolls inside #quotes-container (the body is fixed), so
+        // the listener must watch that element's own scroll metrics.
+        const scroller = this.quotesContainer;
+        scroller.addEventListener('scroll', () => {
             // Load more quotes when user is near the bottom
-            if (scrollHeight - scrollTop - clientHeight < 100) {
+            if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 200) {
+                if (this.hasReachedEnd) {
+                    // ZenQuotes rotates in new batches all the time, so the
+                    // end is not permanent: after a pause, another reach for
+                    // the bottom tries again.
+                    if (Date.now() - this.endedAt > 60000) {
+                        this.hasReachedEnd = false;
+                        this.emptyLoads = 0;
+                        this.loadQuotes();
+                    }
+                    return;
+                }
                 this.loadQuotes();
             }
         });
