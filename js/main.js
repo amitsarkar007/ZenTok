@@ -98,7 +98,9 @@ class QuoteManager {
             this.loadingElement.textContent = 'Error loading quotes. Please try again later.';
         } finally {
             this.isLoading = false;
-            this.loadingElement.classList.remove('active');
+            if (!this.hasReachedEnd) {
+                this.loadingElement.classList.remove('active');
+            }
         }
     }
 
