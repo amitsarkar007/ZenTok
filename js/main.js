@@ -85,8 +85,18 @@ class QuoteManager {
                 }
                 this.hasReachedEnd = true;
                 this.endedAt = Date.now();
-                this.loadingElement.textContent = 'You have seen every quote available right now - new ones rotate in all the time, scroll again in a minute';
+                this.loadingElement.textContent = 'You have seen every quote available right now - new ones rotate in all the time';
                 this.loadingElement.classList.add('active');
+                // Scroll position cannot change at the bottom, so no scroll
+                // event will fire to retry. Check for a rotated batch
+                // ourselves every minute until fresh quotes arrive.
+                setTimeout(() => {
+                    if (this.hasReachedEnd) {
+                        this.hasReachedEnd = false;
+                        this.emptyLoads = 0;
+                        this.loadQuotes();
+                    }
+                }, 60000);
                 return;
             }
             this.emptyLoads = 0;
