@@ -21,6 +21,7 @@
 //   cached response to rapid scroll loads.
 
 const ZENQUOTES_URL = 'https://zenquotes.io/api/quotes';
+const ZENQUOTES_RANDOM_URL = 'https://zenquotes.io/api/random';
 // Free tier: 5 requests per 30 seconds per IP. Netlify functions share
 // egress IPs, so stay well under that and always serve the pool rather
 // than erroring when ZenQuotes rate-limits.
@@ -63,6 +64,33 @@ function samplePool() {
         [arr[i], arr[j]] = [arr[j], arr[i]];
     }
     return arr.slice(0, SAMPLE_SIZE);
+}
+
+// /api/random draws from ZenQuotes' whole curated database, not just the
+// current rotating batch. A few of these per request mean every scroll load
+// brings some brand-new quotes even between batch rotations. Random calls
+// that hit the rate limit return a placeholder row, which isRealQuote
+// filters out; failures just mean fewer extras.
+async function fetchRandomExtras(count) {
+    const extras = [];
+    await Promise.all(Array.from({ length: count }, async () => {
+        try {
+            const response = await fetch(ZENQUOTES_RANDOM_URL, {
+                headers: {
+                    'Accept': 'application/json',
+                    'User-Agent': 'ZenTok (https://zentok.netlify.app)'
+                }
+            });
+            if (!response.ok) return;
+            const data = await response.json();
+            if (Array.isArray(data) && data[0] && isRealQuote(data[0])) {
+                extras.push(data[0]);
+            }
+        } catch (error) {
+            // Ignore: extras are a bonus, the pool sample still serves.
+        }
+    }));
+    return extras;
 }
 
 function respond(statusCode, payload) {
@@ -110,5 +138,10 @@ exports.handler = async () => {
     if (state.pool.length === 0) {
         return respond(502, { error: 'Could not load quotes right now. Please try again shortly.' });
     }
-    return respond(200, samplePool());
+
+    // 1 batch refetch (at most every 32s) + 4 randoms stays inside the free
+    // tier's 5 requests per 30 seconds.
+    const extras = await fetchRandomExtras(4);
+    addToPool(extras);
+    return respond(200, [...extras, ...samplePool().slice(0, SAMPLE_SIZE - extras.length)]);
 };
