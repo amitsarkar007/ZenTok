@@ -4,8 +4,6 @@ class QuoteManager {
         this.loadingElement = document.getElementById('loading');
         this.quotes = [];
         this.isLoading = false;
-        // Initialize with a random page between 1 and 3000
-        this.currentPage = Math.floor(Math.random() * 3000) + 1;
         this.hasReachedEnd = false;
         
         this.init();
@@ -16,6 +14,17 @@ class QuoteManager {
         this.setupInfiniteScroll();
     }
 
+    // Fisher-Yates shuffle, so every refresh and every new batch of the
+    // scroll feed starts from a different quote in a different order.
+    shuffleQuotes(quotes) {
+        const shuffled = [...quotes];
+        for (let i = shuffled.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+        }
+        return shuffled;
+    }
+
     async loadQuotes() {
         if (this.isLoading || this.hasReachedEnd) return;
         
@@ -23,18 +32,25 @@ class QuoteManager {
         this.loadingElement.classList.add('active');
 
         try {
-            const proxyUrl = 'https://api.allorigins.win/raw?url=';
-            const targetUrl = encodeURIComponent(`https://zenquotes.io/api/quotes?page=${this.currentPage}`);
-            
-            const response = await fetch(proxyUrl + targetUrl, {
+            // Our own Netlify function fetches ZenQuotes server-side. The
+            // browser cannot call ZenQuotes directly (no CORS headers on the
+            // free tier) and public proxies cache responses, which made every
+            // refresh start from the same quote.
+            const response = await fetch('/.netlify/functions/quotes', {
                 method: 'GET',
                 headers: {
-                    'Accept': 'application/json',
-                    'Content-Type': 'application/json'
+                    'Accept': 'application/json'
                 }
             });
             
-            const newQuotes = await response.json();
+            if (!response.ok) {
+                throw new Error('Quote service returned HTTP ' + response.status);
+            }
+
+            const data = await response.json();
+            const newQuotes = this.shuffleQuotes(
+                (Array.isArray(data) ? data : []).filter(q => q && q.q && q.a)
+            );
             
             if (newQuotes.length === 0) {
                 this.hasReachedEnd = true;
@@ -44,12 +60,9 @@ class QuoteManager {
 
             this.quotes = [...this.quotes, ...newQuotes];
             this.renderQuotes(newQuotes);
-            this.currentPage++;
         } catch (error) {
             console.error('Error loading quotes:', error);
             this.loadingElement.textContent = 'Error loading quotes. Please try again later.';
-            // If there's an error, try a different random page between 1 and 3000
-            this.currentPage = Math.floor(Math.random() * 3000) + 1;
         } finally {
             this.isLoading = false;
             this.loadingElement.classList.remove('active');
