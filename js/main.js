@@ -147,9 +147,10 @@ class QuoteManager {
     }
 
     setupInfiniteScroll() {
-        // The feed scrolls inside #quotes-container (the body is fixed), so
-        // the listener must watch that element's own scroll metrics.
-        const scroller = this.quotesContainer;
+        // The body is fixed; the feed scrolls inside the .container wrapper
+        // (overflow-y: auto with scroll-snap), which is the quote list's
+        // parent. Watch that element's own scroll metrics.
+        const scroller = this.quotesContainer.parentElement;
         scroller.addEventListener('scroll', () => {
             // Load more quotes when user is near the bottom
             if (scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight < 200) {
