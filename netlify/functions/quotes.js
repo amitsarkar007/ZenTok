@@ -67,10 +67,10 @@ function samplePool() {
 }
 
 // /api/random draws from ZenQuotes' whole curated database, not just the
-// current rotating batch. A few of these per request mean every scroll load
-// brings some brand-new quotes even between batch rotations. Random calls
-// that hit the rate limit return a placeholder row, which isRealQuote
-// filters out; failures just mean fewer extras.
+// current rotating batch. A few of these per refetch tick grow the pool
+// with brand-new quotes even between batch rotations (roughly hourly).
+// Random calls that hit the rate limit return a placeholder row, which
+// isRealQuote filters out; failures just mean fewer extras.
 async function fetchRandomExtras(count) {
     const extras = [];
     await Promise.all(Array.from({ length: count }, async () => {
@@ -129,6 +129,11 @@ exports.handler = async () => {
             }
             state.fetchedAt = now;
             addToPool(quotes);
+            // Extras from the whole database, fetched only on this refetch
+            // tick: 1 batch + 4 randoms = 5 requests per 32s, inside the free
+            // tier's 5 per 30s. Per-call randoms get rate-limited on shared
+            // egress IPs and ZenQuotes then serves placeholder rows.
+            addToPool(await fetchRandomExtras(4));
         } catch (error) {
             console.error('ZenQuotes fetch failed:', error);
             // Fall through and serve whatever the pool already holds.
@@ -139,9 +144,5 @@ exports.handler = async () => {
         return respond(502, { error: 'Could not load quotes right now. Please try again shortly.' });
     }
 
-    // 1 batch refetch (at most every 32s) + 4 randoms stays inside the free
-    // tier's 5 requests per 30 seconds.
-    const extras = await fetchRandomExtras(4);
-    addToPool(extras);
-    return respond(200, [...extras, ...samplePool().slice(0, SAMPLE_SIZE - extras.length)]);
+    return respond(200, samplePool());
 };
