@@ -5,6 +5,14 @@ class QuoteManager {
         this.quotes = [];
         this.isLoading = false;
         this.hasReachedEnd = false;
+        // Keys of every quote already shown this session, so a batch that
+        // overlaps what is on screen never renders a visible repeat.
+        this.seen = new Set();
+        // Consecutive loads that brought nothing new. The ZenQuotes batch
+        // rotates roughly every minute, so a fast scroller who outruns the
+        // rotation retries a few times before we call it the end.
+        this.emptyLoads = 0;
+        this.retryPending = false;
         
         this.init();
     }
@@ -26,7 +34,7 @@ class QuoteManager {
     }
 
     async loadQuotes() {
-        if (this.isLoading || this.hasReachedEnd) return;
+        if (this.isLoading || this.hasReachedEnd || this.retryPending) return;
         
         this.isLoading = true;
         this.loadingElement.classList.add('active');
@@ -51,15 +59,37 @@ class QuoteManager {
             const newQuotes = this.shuffleQuotes(
                 (Array.isArray(data) ? data : []).filter(q => q && q.q && q.a)
             );
-            
-            if (newQuotes.length === 0) {
+
+            // Drop anything already on screen before rendering.
+            const fresh = newQuotes.filter(q => {
+                const key = q.q + '|' + q.a;
+                if (this.seen.has(key)) return false;
+                this.seen.add(key);
+                return true;
+            });
+
+            if (fresh.length === 0) {
+                this.emptyLoads++;
+                if (this.emptyLoads <= 3) {
+                    // Same batch as before (rotation has not ticked yet).
+                    // Wait for the next rotation and try again quietly.
+                    this.retryPending = true;
+                    this.loadingElement.classList.remove('active');
+                    setTimeout(() => {
+                        this.retryPending = false;
+                        this.loadQuotes();
+                    }, 10000 * this.emptyLoads);
+                    return;
+                }
                 this.hasReachedEnd = true;
-                this.loadingElement.textContent = 'No more quotes available';
+                this.loadingElement.textContent = 'You have seen every quote available right now - new ones rotate in all the time, check back soon';
+                this.loadingElement.classList.add('active');
                 return;
             }
+            this.emptyLoads = 0;
 
-            this.quotes = [...this.quotes, ...newQuotes];
-            this.renderQuotes(newQuotes);
+            this.quotes = [...this.quotes, ...fresh];
+            this.renderQuotes(fresh);
         } catch (error) {
             console.error('Error loading quotes:', error);
             this.loadingElement.textContent = 'Error loading quotes. Please try again later.';
